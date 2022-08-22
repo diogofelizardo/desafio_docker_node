@@ -1,0 +1,48 @@
+version: '3.9'
+
+services: 
+
+  app:
+    restart: on-failure
+    build: ./node
+    container_name: app
+    networks: 
+      - network-node
+    ports:
+      - "81:4000"
+    depends_on:
+       - db
+
+  db:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: db
+    restart: always
+    tty: true
+    volumes: 
+      - ./mysql:/var/lib/mysql
+    environment: 
+      MYSQL_ROOT_PASSWORD: 'b3RmELKOvCUrAdxIg0GEmugc3SY'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: 'desafio'
+    ports:
+      - '3366:3306'
+    expose:
+      - '3306'
+    networks: 
+      - network-node
+
+  webserver:
+    build: ./nginx
+    container_name: webserver
+    restart: unless-stopped
+    depends_on:
+      - app
+    networks: 
+      - network-node
+    ports: 
+      - "8080:80"
+
+networks: 
+  network-node:
+    driver: bridge
