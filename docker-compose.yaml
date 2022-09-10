@@ -1,17 +1,18 @@
-version: '3.9'
+version: '3'
 
-services: 
+services:
 
   app:
-    restart: on-failure
-    build: ./node
+    build:
+      context: ./node
     container_name: app
-    networks: 
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
+    command: npm start
+    networks:
       - network-node
-    ports:
-      - "81:4000"
+    tty: true
     depends_on:
-       - db
+      - db
 
   db:
     image: mysql:5.7
@@ -19,30 +20,29 @@ services:
     container_name: db
     restart: always
     tty: true
-    volumes: 
+    volumes:
       - ./mysql:/var/lib/mysql
-    environment: 
+    environment:
       MYSQL_ROOT_PASSWORD: 'b3RmELKOvCUrAdxIg0GEmugc3SY'
       MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: 'desafio'
     ports:
-      - '3366:3306'
-    expose:
-      - '3306'
-    networks: 
+      - '3306:3306'
+    networks:
       - network-node
 
   webserver:
-    build: ./nginx
+    build:
+      context: ./nginx
     container_name: webserver
     restart: unless-stopped
     depends_on:
       - app
-    networks: 
+    networks:
       - network-node
-    ports: 
-      - "8080:80"
+    ports:
+      - "8080:8080"
 
-networks: 
+networks:
   network-node:
     driver: bridge
